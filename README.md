@@ -29,27 +29,71 @@ Why this is different from Flue's default virtual sandbox:
 - The default virtual sandbox is lighter, cheaper, and faster for simple prompt-and-response agents.
 - This container sandbox is heavier, but useful when the agent needs real system tools, package installs, git operations, Python scripts, or a more realistic coding/data environment.
 
-Security note:
-
-- The public HTTP route is protected by a shared bearer token: `GRC_AGENT_TOKEN`.
-- Do not commit `.env` or paste the token publicly.
-- Treat the token like a password. Rotate it if it leaks.
-- This is a starter auth pattern, not a full identity system.
-
 Docs:
 
 - Flue Cloudflare container agents: https://github.com/withastro/flue/blob/main/docs/deploy-cloudflare.md#container-agents
 - Cloudflare Containers: https://developers.cloudflare.com/containers/
+
+## Auth model
+
+The generated Worker supports configurable auth for `/agents` routes via `GRC_AUTH_MODE`.
+
+### Option 1: Bearer token auth
+
+Use this for local testing or simple private API access:
+
+```env
+GRC_AUTH_MODE="token"
+GRC_AGENT_TOKEN="some-long-random-token"
+```
+
+Requests must include:
+
+```bash
+-H "Authorization: Bearer $GRC_AGENT_TOKEN"
+```
+
+### Option 2: Cloudflare Access
+
+Use this when the Worker is deployed publicly but should only be reachable by approved Cloudflare Access users.
+
+```env
+GRC_AUTH_MODE="cloudflare-access"
+GRC_ACCESS_ALLOWED_EMAILS="alice@example.com,bob@example.com"
+```
+
+How it works:
+
+- Cloudflare Access sits in front of the Worker and handles login/identity.
+- The Worker requires the `Cf-Access-Authenticated-User-Email` header.
+- If `GRC_ACCESS_ALLOWED_EMAILS` is set, the Worker also checks that the Access-authenticated email is on that allowlist.
+- If the allowlist is blank, any user who passes your Cloudflare Access policy is allowed.
+
+You still need to configure a Cloudflare Access application/policy in the Cloudflare dashboard for the deployed Worker hostname. The app-level check here is a fail-closed guard, not a replacement for configuring Access.
+
+### Option 3: No app-level auth
+
+Only use this for local/private experiments:
+
+```env
+GRC_AUTH_MODE="none"
+```
+
+Security notes:
+
+- Do not commit `.env`.
+- Treat `GRC_AGENT_TOKEN` like a password. Rotate it if it leaks.
+- Prefer Cloudflare Access for shared/team usage.
 
 ## Setup
 
 ```bash
 npm install
 cp .env.example .env
-# edit .env and set CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_KEY, and GRC_AGENT_TOKEN
+# edit .env and set CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_KEY, and auth settings
 ```
 
-Generate a token if you need one:
+Generate a token if you use token auth:
 
 ```bash
 openssl rand -hex 32
@@ -76,7 +120,7 @@ curl http://localhost:3583/agents/grc-engineer/test-1 \
   }'
 ```
 
-Note: `npm run build` patches the generated Cloudflare Worker with bearer-token auth for `/agents` routes. Use `npm run dev` or `npm run deploy` so the auth patch is applied.
+Note: `npm run build` patches the generated Cloudflare Worker with auth for `/agents` routes. Use `npm run dev` or `npm run deploy` so the auth patch is applied.
 
 ## Build and deploy
 
