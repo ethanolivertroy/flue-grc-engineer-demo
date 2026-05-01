@@ -1,0 +1,6 @@
+{
+  "$schema": "https://workers.cloudflare.com/schema/wrangler.json",
+  "name": "flue-grc-engineer",
+  "compatibility_date": "2026-04-01",
+  "compatibility_flags": ["nodejs_compat"]
+}
