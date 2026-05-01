@@ -2,6 +2,24 @@
 
 A small Flue starter agent for governance, risk, and compliance engineering tasks, deployed on Cloudflare Workers.
 
+## What is Flue?
+
+[Flue](https://github.com/withastro/flue) is an experimental sandbox agent framework from the Astro team. It lets you build AI agents as small TypeScript handlers that can be invoked over HTTP or from automation.
+
+A Flue agent usually has three parts:
+
+- **Agent handler**: TypeScript code in `agents/` that receives a payload, initializes a model/sandbox, and runs prompts or skills.
+- **Model**: The LLM used by the agent. This project uses Cloudflare Workers AI with Kimi K2.6: `cloudflare-workers-ai/@cf/moonshotai/kimi-k2.6`.
+- **Sandbox**: An isolated environment where the agent can read/write files and run shell commands. This project uses Cloudflare's full container sandbox.
+
+In this repo, Flue builds the `agents/grc-engineer.ts` handler into a Cloudflare Worker endpoint:
+
+```txt
+POST /agents/grc-engineer/:id
+```
+
+The `:id` acts like a session/agent instance id. Reusing the same id can preserve agent/session state; using a new id starts a separate session.
+
 ## Sandbox model
 
 This project uses a **full Cloudflare Container sandbox** via `@cloudflare/sandbox`:
