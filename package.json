@@ -1,7 +1,7 @@
 {
-  "name": "flue-grc-engineer",
+  "name": "flue-grc-engineer-demo",
   "version": "1.0.0",
-  "description": "A Flue GRC engineer agent for Cloudflare Workers.",
+  "description": "A Flue GRC engineer demo agent for Cloudflare Workers.",
   "type": "module",
   "scripts": {
     "dev": "npm run build && wrangler dev --config dist/wrangler.jsonc --env-file .env",

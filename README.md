@@ -1,6 +1,6 @@
-# Flue GRC Engineer
+# Flue GRC Engineer Demo
 
-A small Flue starter agent for governance, risk, and compliance engineering tasks, deployed on Cloudflare Workers.
+A small Flue demo agent for governance, risk, and compliance engineering tasks, deployed on Cloudflare Workers.
 
 ## What is Flue?
 
