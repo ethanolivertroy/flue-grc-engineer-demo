@@ -77,17 +77,21 @@ Use this when the Worker is deployed publicly but should only be reachable by ap
 
 ```env
 GRC_AUTH_MODE="cloudflare-access"
+GRC_ACCESS_TEAM_NAME="your-team-name"
+GRC_ACCESS_AUD="your-access-application-aud"
 GRC_ACCESS_ALLOWED_EMAILS="alice@example.com,bob@example.com"
 ```
 
 How it works:
 
 - Cloudflare Access sits in front of the Worker and handles login/identity.
-- The Worker requires the `Cf-Access-Authenticated-User-Email` header.
-- If `GRC_ACCESS_ALLOWED_EMAILS` is set, the Worker also checks that the Access-authenticated email is on that allowlist.
+- The Worker validates the `Cf-Access-Jwt-Assertion` JWT signature using your Cloudflare Access signing keys.
+- Set `GRC_ACCESS_TEAM_NAME` to the team name in `https://<team-name>.cloudflareaccess.com`.
+- Set `GRC_ACCESS_AUD` to the Access application AUD tag from the Zero Trust dashboard.
+- If `GRC_ACCESS_ALLOWED_EMAILS` is set, the Worker also checks that the verified JWT email is on that allowlist.
 - If the allowlist is blank, any user who passes your Cloudflare Access policy is allowed.
 
-You still need to configure a Cloudflare Access application/policy in the Cloudflare dashboard for the deployed Worker hostname. The app-level check here is a fail-closed guard, not a replacement for configuring Access.
+You still need to configure a Cloudflare Access application/policy in the Cloudflare dashboard for the deployed Worker hostname. The app-level JWT validation here is a fail-closed guard and defense-in-depth check.
 
 ### Option 3: No app-level auth
 
