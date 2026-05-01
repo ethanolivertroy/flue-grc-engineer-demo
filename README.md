@@ -2,6 +2,30 @@
 
 A small Flue starter agent for governance, risk, and compliance engineering tasks, deployed on Cloudflare Workers.
 
+## Sandbox model
+
+This starter uses Flue's default **virtual sandbox**:
+
+```ts
+const agent = await init({ model: 'cloudflare-workers-ai/@cf/moonshotai/kimi-k2.6' });
+```
+
+What that means:
+
+- The agent does **not** get direct access to your laptop filesystem.
+- The agent does **not** receive your `.env` secrets in its prompt.
+- The agent gets an isolated virtual filesystem and basic shell environment powered by Flue/`just-bash`.
+- This is fast and cheap, and works well for prompt-and-response GRC work.
+- On Cloudflare, Flue also uses Durable Objects for persisted agent/session state.
+
+What it is **not**:
+
+- It is not a full Linux virtual machine.
+- It is not a full container with system packages, browsers, `apt`, etc.
+- It should not be treated as a production security boundary for arbitrary untrusted code without additional review.
+
+Flue's Cloudflare deploy docs also describe a **full Linux container sandbox** option using Cloudflare Containers and `@cloudflare/sandbox`. That mode requires adding `@cloudflare/sandbox`, declaring Durable Object/container bindings in `wrangler.jsonc`, and adding a `Dockerfile`. Use that path when the agent needs a real Linux environment with tools like git, Node.js, Python, browsers, or system packages.
+
 ## Setup
 
 ```bash
