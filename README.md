@@ -4,27 +4,42 @@ A small Flue starter agent for governance, risk, and compliance engineering task
 
 ## Sandbox model
 
-This starter uses Flue's default **virtual sandbox**:
+This project uses a **full Cloudflare Container sandbox** via `@cloudflare/sandbox`:
 
 ```ts
-const agent = await init({ model: 'cloudflare-workers-ai/@cf/moonshotai/kimi-k2.6' });
+const sandbox = getSandbox(env.Sandbox, id);
+
+const agent = await init({
+  sandbox,
+  model: 'cloudflare-workers-ai/@cf/moonshotai/kimi-k2.6',
+});
 ```
 
 What that means:
 
-- The agent does **not** get direct access to your laptop filesystem.
-- The agent does **not** receive your `.env` secrets in its prompt.
-- The agent gets an isolated virtual filesystem and basic shell environment powered by Flue/`just-bash`.
-- This is fast and cheap, and works well for prompt-and-response GRC work.
-- On Cloudflare, Flue also uses Durable Objects for persisted agent/session state.
+- Each agent id/session gets a real isolated Linux container sandbox.
+- The container image is defined in `Dockerfile`.
+- The starter image includes Node.js, git, curl, CA certificates, and Python 3.
+- The agent can use a real Linux filesystem and shell inside the sandbox.
+- Cloudflare Durable Objects coordinate sandbox/session persistence.
+- Your `.env` secrets are Worker environment values; they are not automatically written into the agent prompt.
 
-What it is **not**:
+Why this is different from Flue's default virtual sandbox:
 
-- It is not a full Linux virtual machine.
-- It is not a full container with system packages, browsers, `apt`, etc.
-- It should not be treated as a production security boundary for arbitrary untrusted code without additional review.
+- The default virtual sandbox is lighter, cheaper, and faster for simple prompt-and-response agents.
+- This container sandbox is heavier, but useful when the agent needs real system tools, package installs, git operations, Python scripts, or a more realistic coding/data environment.
 
-Flue's Cloudflare deploy docs also describe a **full Linux container sandbox** option using Cloudflare Containers and `@cloudflare/sandbox`. That mode requires adding `@cloudflare/sandbox`, declaring Durable Object/container bindings in `wrangler.jsonc`, and adding a `Dockerfile`. Use that path when the agent needs a real Linux environment with tools like git, Node.js, Python, browsers, or system packages.
+Security note:
+
+- The public HTTP route is protected by a shared bearer token: `GRC_AGENT_TOKEN`.
+- Do not commit `.env` or paste the token publicly.
+- Treat the token like a password. Rotate it if it leaks.
+- This is a starter auth pattern, not a full identity system.
+
+Docs:
+
+- Flue Cloudflare container agents: https://github.com/withastro/flue/blob/main/docs/deploy-cloudflare.md#container-agents
+- Cloudflare Containers: https://developers.cloudflare.com/containers/
 
 ## Setup
 
@@ -49,6 +64,8 @@ npm run dev
 Then call the agent:
 
 ```bash
+source .env
+
 curl http://localhost:3583/agents/grc-engineer/test-1 \
   -H "Authorization: Bearer $GRC_AGENT_TOKEN" \
   -H "Content-Type: application/json" \

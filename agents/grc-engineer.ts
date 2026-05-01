@@ -1,10 +1,18 @@
+import { getSandbox } from '@cloudflare/sandbox';
 import type { FlueContext } from '@flue/sdk/client';
 import * as v from 'valibot';
 
 export const triggers = { webhook: true };
 
-export default async function ({ init, payload }: FlueContext) {
-  const agent = await init({ model: 'cloudflare-workers-ai/@cf/moonshotai/kimi-k2.6' });
+export default async function ({ init, id, payload, env }: FlueContext) {
+  // Use a full Cloudflare Container sandbox for each agent id/session.
+  // This gives the agent a real Linux environment instead of the default virtual sandbox.
+  const sandbox = getSandbox(env.Sandbox, id);
+
+  const agent = await init({
+    sandbox,
+    model: 'cloudflare-workers-ai/@cf/moonshotai/kimi-k2.6',
+  });
   const session = await agent.session();
 
   const framework = payload.framework ?? 'SOC 2';
